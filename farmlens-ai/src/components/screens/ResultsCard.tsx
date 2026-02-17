@@ -3,6 +3,8 @@ import { AlertTriangle, CheckCircle2, Cloud, Droplets, Info, Leaf, ThermometerSu
 import { GlassCard } from "@/components/ui/GlassCard";
 import { AccuracyMeter } from "@/components/ui/AccuracyMeter";
 import { Button } from "@/components/ui/button";
+import { VideoPlayer } from "@/components/ui/VideoPlayer";
+import { VideoErrorBoundary } from "@/components/ui/VideoErrorBoundary";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { translations, LanguageCode } from "@/data/translations";
@@ -18,10 +20,12 @@ interface DiagnosisResult {
     temperature: number;
     condition: string;
   };
+  videoUrl?: string; // URL for the prevention/treatment video
 }
 
 interface ResultsCardProps {
   result: DiagnosisResult;
+  imageUrl?: string | null;
   onTreatmentClick?: () => void;
   onShareClick?: () => void;
   className?: string;
@@ -51,7 +55,7 @@ const severityConfig = {
   },
 };
 
-const ResultsCard = ({ result, onTreatmentClick, onShareClick, className }: ResultsCardProps) => {
+const ResultsCard = ({ result, imageUrl, onTreatmentClick, onShareClick, className }: ResultsCardProps) => {
   const { selectedLanguage } = useAppStore();
   const t = translations[selectedLanguage as LanguageCode] || translations.en;
 
@@ -66,6 +70,25 @@ const ResultsCard = ({ result, onTreatmentClick, onShareClick, className }: Resu
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 200 }}
     >
+      {/* Uploaded Image Preview */}
+      {imageUrl && (
+        <motion.div
+          className="w-full h-48 rounded-xl overflow-hidden mb-6 relative group"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <img
+            src={imageUrl}
+            alt="Scanned Crop"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute bottom-3 left-3 text-white text-xs font-medium px-2 py-1 bg-black/30 backdrop-blur-sm rounded-lg border border-white/20">
+            Scanned Image
+          </div>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -188,6 +211,18 @@ const ResultsCard = ({ result, onTreatmentClick, onShareClick, className }: Resu
         </ul>
       </motion.div>
 
+      {/* Video Reference - Always show for diseases */}
+      {!result.disease.toLowerCase().includes('healthy') && (
+        <VideoErrorBoundary>
+          <VideoPlayer
+            initialVideoUrl={result.videoUrl}
+            cropName={result.disease.split(' ')[0]}
+            diseaseName={result.disease}
+            className="mb-6"
+          />
+        </VideoErrorBoundary>
+      )}
+
       {/* Action buttons */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -199,14 +234,14 @@ const ResultsCard = ({ result, onTreatmentClick, onShareClick, className }: Resu
           onClick={onTreatmentClick}
           className="flex-1 h-12 rounded-xl bg-primary-gradient text-primary-foreground font-semibold shadow-primary-glow"
         >
-          Get Treatment
+          Buy Medicines
         </Button>
         <Button
           onClick={onShareClick}
           variant="outline"
           className="h-12 px-4 rounded-xl border-2"
         >
-          Share
+          Share Report
         </Button>
       </motion.div>
     </GlassCard>
