@@ -131,65 +131,248 @@ const BentoGrid = () => (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[600px]">
                 {/* Large Card - Crop Diagnosis */}
                 <motion.div
-                    whileHover={{ scale: 0.98 }}
-                    className="md:col-span-2 row-span-2 rounded-[2rem] bg-zinc-900/50 border border-white/10 overflow-hidden relative group"
+                    whileHover={{ scale: 0.99 }}
+                    className="md:col-span-2 row-span-2 rounded-[2rem] border border-emerald-500/20 overflow-hidden relative group"
+                    style={{ background: "linear-gradient(145deg, #0a1f0f 0%, #071510 100%)" }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 to-black/80 z-0" />
-                    <img src="https://images.unsplash.com/photo-1628352081506-83c43123ed6d?q=80&w=2696&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay group-hover:scale-105 transition-transform duration-700" alt="Plant analysis" />
+                    {/* Bright image — no dim overlay */}
+                    <img
+                        src="https://images.unsplash.com/photo-1628352081506-83c43123ed6d?q=80&w=2696&auto=format&fit=crop"
+                        className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                        alt="Plant analysis"
+                    />
+                    {/* Only a bottom gradient for text legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+                    {/* Animated scan line across image */}
+                    <motion.div
+                        className="absolute inset-x-0 h-[2px] z-10 pointer-events-none"
+                        style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.9), rgba(52,211,153,1), rgba(16,185,129,0.9), transparent)" }}
+                        animate={{ top: ["5%", "95%", "5%"] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    />
+                    {/* Scan glow */}
+                    <motion.div
+                        className="absolute inset-x-0 h-12 blur-xl z-10 pointer-events-none"
+                        style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)" }}
+                        animate={{ top: ["2%", "90%", "2%"] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    />
 
                     <div className="relative z-10 p-10 h-full flex flex-col justify-end">
-                        <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/20">
+                        <motion.div
+                            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg"
+                            style={{ background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 0 30px rgba(16,185,129,0.5)" }}
+                            animate={{ boxShadow: ["0 0 20px rgba(16,185,129,0.4)", "0 0 50px rgba(16,185,129,0.7)", "0 0 20px rgba(16,185,129,0.4)"] }}
+                            transition={{ duration: 2.5, repeat: Infinity }}
+                        >
                             <ScanLine className="w-8 h-8 text-white" />
-                        </div>
+                        </motion.div>
                         <h3 className="text-3xl font-bold text-white mb-2">Neural-Agri™ CV</h3>
-                        <p className="text-gray-400 text-lg max-w-md">Real-time pathogen diagnosis using edge computing. 99.8% accuracy on early-stage blight detection.</p>
+                        <p className="text-gray-300 text-lg max-w-md">Real-time pathogen diagnosis using edge computing. 99.8% accuracy on early-stage blight detection.</p>
 
                         {/* Overlay UI Mockup */}
-                        <div className="absolute top-10 right-10 bg-black/60 backdrop-blur-md border border-emerald-500/30 p-4 rounded-xl">
-                            <div className="flex items-center gap-3 text-emerald-400 text-sm font-mono mb-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="absolute top-10 right-10 backdrop-blur-md border border-emerald-500/40 p-4 rounded-xl" style={{ background: "rgba(0,0,0,0.7)" }}>
+                            <div className="flex items-center gap-3 text-emerald-400 text-sm font-mono mb-3">
+                                <motion.div
+                                    className="w-2 h-2 rounded-full bg-emerald-400"
+                                    animate={{ opacity: [1, 0.2, 1], scale: [1, 1.3, 1] }}
+                                    transition={{ duration: 1, repeat: Infinity }}
+                                />
                                 SCANNING...
                             </div>
                             <div className="w-48 h-2 bg-gray-800 rounded-full overflow-hidden">
                                 <motion.div
-                                    animate={{ width: ["0%", "100%"] }}
-                                    transition={{ duration: 2, repeat: Infinity }}
-                                    className="h-full bg-emerald-500"
+                                    animate={{ width: ["0%", "100%", "0%"] }}
+                                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                                    className="h-full rounded-full"
+                                    style={{ background: "linear-gradient(90deg, #10b981, #34d399)" }}
                                 />
+                            </div>
+                            <div className="mt-3 flex gap-2">
+                                {["CNN", "98.8%", "BLIGHT"].map((tag, i) => (
+                                    <motion.span
+                                        key={tag}
+                                        className="text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30 text-emerald-300"
+                                        style={{ background: "rgba(16,185,129,0.1)" }}
+                                        animate={{ opacity: [0.5, 1, 0.5] }}
+                                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                                    >
+                                        {tag}
+                                    </motion.span>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </motion.div>
 
-                {/* Small Card 1 - Market */}
+                {/* Small Card 1 - Market Futures */}
                 <motion.div
-                    whileHover={{ scale: 0.98 }}
-                    className="rounded-[2rem] bg-zinc-900/50 border border-white/10 p-8 flex flex-col justify-between relative overflow-hidden group"
+                    whileHover={{ scale: 0.98, borderColor: "rgba(245,158,11,0.5)" }}
+                    className="rounded-[2rem] border border-white/10 p-8 flex flex-col justify-between relative overflow-hidden group cursor-pointer"
+                    style={{ background: "linear-gradient(145deg, #1a1000 0%, #0d0800 100%)" }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 to-transparent" />
-                    <TrendingUp className="w-10 h-10 text-amber-500 mb-4" />
-                    <div>
+                    {/* Animated background glow */}
+                    <motion.div
+                        className="absolute inset-0 pointer-events-none"
+                        animate={{ opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        style={{ background: "radial-gradient(ellipse at 30% 30%, rgba(245,158,11,0.15) 0%, transparent 70%)" }}
+                    />
+
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <motion.div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center border border-amber-500/30"
+                                style={{ background: "rgba(245,158,11,0.15)" }}
+                                animate={{ boxShadow: ["0 0 10px rgba(245,158,11,0.2)", "0 0 25px rgba(245,158,11,0.5)", "0 0 10px rgba(245,158,11,0.2)"] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                            >
+                                <TrendingUp className="w-6 h-6 text-amber-400" />
+                            </motion.div>
+                            {/* Live ticker */}
+                            <motion.div
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-green-500/30 text-green-400 text-xs font-mono"
+                                style={{ background: "rgba(34,197,94,0.1)" }}
+                                animate={{ opacity: [0.7, 1, 0.7] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                                <motion.div className="w-1.5 h-1.5 rounded-full bg-green-400" animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.8, repeat: Infinity }} />
+                                LIVE
+                            </motion.div>
+                        </div>
                         <h3 className="text-xl font-bold text-white mb-1">Market Futures</h3>
                         <p className="text-sm text-gray-500">Predictive pricing models.</p>
+
+                        {/* Price display */}
+                        <div className="mt-3 flex items-baseline gap-2">
+                            <motion.span
+                                className="text-2xl font-bold text-amber-400"
+                                animate={{ opacity: [0.8, 1, 0.8] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                            >
+                                ₹2,847
+                            </motion.span>
+                            <span className="text-xs text-green-400 font-semibold">▲ +4.2%</span>
+                        </div>
                     </div>
-                    {/* Graph Line */}
-                    <svg className="absolute bottom-0 left-0 right-0 h-16 text-amber-500/20" viewBox="0 0 100 40" preserveAspectRatio="none">
-                        <path d="M0 30 Q 20 10, 40 25 T 100 0 V 40 H 0 Z" fill="currentColor" />
-                    </svg>
+
+                    {/* Animated SVG chart */}
+                    <div className="relative h-20 mt-2">
+                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
+                            {/* Filled area */}
+                            <motion.path
+                                d="M0 50 Q 30 40, 50 35 T 90 20 T 130 15 T 170 8 T 200 5 V 60 H 0 Z"
+                                fill="url(#amberGrad)"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 1 }}
+                            />
+                            {/* Line */}
+                            <motion.path
+                                d="M0 50 Q 30 40, 50 35 T 90 20 T 130 15 T 170 8 T 200 5"
+                                fill="none"
+                                stroke="#f59e0b"
+                                strokeWidth="2"
+                                initial={{ pathLength: 0 }}
+                                animate={{ pathLength: 1 }}
+                                transition={{ duration: 2, repeat: Infinity, repeatType: "loop", ease: "easeInOut" }}
+                            />
+                            {/* Moving dot on line */}
+                            <motion.circle
+                                r="3"
+                                fill="#f59e0b"
+                                filter="url(#glow)"
+                                animate={{ cx: [0, 50, 100, 150, 200], cy: [50, 35, 20, 8, 5] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            />
+                            <defs>
+                                <linearGradient id="amberGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgba(245,158,11,0.3)" />
+                                    <stop offset="100%" stopColor="rgba(245,158,11,0)" />
+                                </linearGradient>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                </filter>
+                            </defs>
+                        </svg>
+                    </div>
                 </motion.div>
 
-                {/* Small Card 2 - Community */}
+                {/* Small Card 2 - Global League */}
                 <motion.div
-                    whileHover={{ scale: 0.98 }}
-                    className="rounded-[2rem] bg-zinc-900/50 border border-white/10 p-8 flex flex-col justify-between relative overflow-hidden group"
+                    whileHover={{ scale: 0.98, borderColor: "rgba(168,85,247,0.5)" }}
+                    className="rounded-[2rem] border border-white/10 p-8 flex flex-col justify-between relative overflow-hidden group cursor-pointer"
+                    style={{ background: "linear-gradient(145deg, #0d0a1a 0%, #080612 100%)" }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-transparent" />
-                    <Globe className="w-10 h-10 text-purple-500 mb-4" />
-                    <div>
+                    {/* Animated background glow */}
+                    <motion.div
+                        className="absolute inset-0 pointer-events-none"
+                        animate={{ opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        style={{ background: "radial-gradient(ellipse at 70% 30%, rgba(168,85,247,0.2) 0%, transparent 70%)" }}
+                    />
+
+                    {/* Orbiting ring */}
+                    <motion.div
+                        className="absolute top-6 right-6 w-20 h-20 rounded-full border border-purple-500/20"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    >
+                        <motion.div
+                            className="absolute -top-1 left-1/2 w-2 h-2 rounded-full bg-purple-400"
+                            style={{ boxShadow: "0 0 8px rgba(168,85,247,0.8)" }}
+                        />
+                    </motion.div>
+
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <motion.div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center border border-purple-500/30"
+                                style={{ background: "rgba(168,85,247,0.15)" }}
+                                animate={{ boxShadow: ["0 0 10px rgba(168,85,247,0.2)", "0 0 25px rgba(168,85,247,0.5)", "0 0 10px rgba(168,85,247,0.2)"] }}
+                                transition={{ duration: 2.5, repeat: Infinity }}
+                            >
+                                <Globe className="w-6 h-6 text-purple-400" />
+                            </motion.div>
+                            {/* Animated rank badge */}
+                            <motion.div
+                                className="text-3xl font-extrabold text-white"
+                                animate={{ scale: [1, 1.1, 1], textShadow: ["0 0 10px rgba(168,85,247,0.5)", "0 0 25px rgba(168,85,247,0.9)", "0 0 10px rgba(168,85,247,0.5)"] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                            >
+                                #1
+                            </motion.div>
+                        </div>
                         <h3 className="text-xl font-bold text-white mb-1">Global League</h3>
                         <p className="text-sm text-gray-500">Compete with top cultivators.</p>
                     </div>
-                    <div className="absolute top-8 right-8 text-2xl font-bold text-white">#1</div>
+
+                    {/* Animated leaderboard rows */}
+                    <div className="relative z-10 mt-3 space-y-2">
+                        {[
+                            { rank: 1, name: "Ravi Kumar", pts: "9,840", color: "text-amber-400" },
+                            { rank: 2, name: "Priya Farms", pts: "8,210", color: "text-gray-300" },
+                            { rank: 3, name: "GreenAcre", pts: "7,650", color: "text-orange-400" },
+                        ].map((row, i) => (
+                            <motion.div
+                                key={row.rank}
+                                className="flex items-center justify-between px-3 py-1.5 rounded-lg border border-white/5"
+                                style={{ background: "rgba(255,255,255,0.03)" }}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 + i * 0.15 }}
+                                whileHover={{ background: "rgba(168,85,247,0.1)", borderColor: "rgba(168,85,247,0.3)" }}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold w-4 ${row.color}`}>{row.rank}</span>
+                                    <span className="text-xs text-gray-300">{row.name}</span>
+                                </div>
+                                <span className="text-xs font-mono text-purple-300">{row.pts}</span>
+                            </motion.div>
+                        ))}
+                    </div>
                 </motion.div>
             </div>
         </div>
