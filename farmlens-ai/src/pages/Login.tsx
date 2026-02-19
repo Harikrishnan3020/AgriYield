@@ -1,19 +1,216 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
-import {
-    Eye, EyeOff, Lock, User, ArrowRight,
-    Leaf, ShieldCheck,
-    Globe, TrendingUp, Smartphone, UploadCloud, Hexagon,
-    Star, CheckCircle2
-} from "lucide-react";
+import { Leaf, User, Lock, ArrowRight, Eye, EyeOff, X, Mail, Smartphone, RefreshCw, CheckCircle, Globe, Hexagon, Star, MessageCircle, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { useAppStore } from "@/store/useAppStore";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
+
+// --- OTP Modal Component ---
+const OTPModal = ({ onClose, onSuccess, initialContact = "" }: { onClose: () => void; onSuccess: (contact: string) => void; initialContact?: string }) => {
+    const [step, setStep] = useState<'input' | 'verify' | 'success'>('input');
+    const [otpContact, setOtpContact] = useState(initialContact);
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [generatedOtp, setGeneratedOtp] = useState('');
+    const [isSending, setIsSending] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [otpError, setOtpError] = useState('');
+
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const t = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+            return () => clearTimeout(t);
+        }
+    }, [resendCooldown]);
+
+    const handleSendOtp = async () => {
+        if (!otpContact.trim()) {
+            toast.error('Please enter your email or phone number');
+            return;
+        }
+        setIsSending(true);
+        // Generate a 6-digit OTP
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        setGeneratedOtp(code);
+        // Simulate sending delay
+        await new Promise(r => setTimeout(r, 1500));
+        setIsSending(false);
+        setStep('verify');
+        setResendCooldown(30);
+        // Show OTP in toast for demo (in production, this would be sent via email/SMS)
+        toast.success(`OTP sent from AgriYield@gmail.com! Code: ${code}`, { duration: 15000 });
+    };
+
+    const handleOtpChange = (index: number, value: string) => {
+        if (!/^\d?$/.test(value)) return;
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+        setOtpError('');
+        // Auto focus next
+        if (value && index < 5) {
+            const nextInput = document.getElementById(`otp-${index + 1}`);
+            nextInput?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            const prevInput = document.getElementById(`otp-${index - 1}`);
+            prevInput?.focus();
+        }
+    };
+
+    const handleVerifyOtp = () => {
+        const enteredOtp = otp.join('');
+        if (enteredOtp.length < 6) {
+            setOtpError('Please enter the complete 6-digit OTP');
+            return;
+        }
+        if (enteredOtp === generatedOtp) {
+            setStep('success');
+            setTimeout(() => {
+                onSuccess(otpContact);
+                onClose();
+            }, 1500);
+        } else {
+            setOtpError('Invalid OTP. Please try again.');
+            setOtp(['', '', '', '', '', '']);
+            document.getElementById('otp-0')?.focus();
+        }
+    };
+
+    return createPortal(
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+                onClick={(e) => e.target === e.currentTarget && onClose()}
+            >
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-white/20 p-8 w-full max-w-sm relative overflow-hidden"
+                >
+                    <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors z-10">
+                        <X className="w-5 h-5 text-gray-500" />
+                    </button>
+
+                    <AnimatePresence mode="wait">
+                        {step === 'input' && (
+                            <motion.div key="input" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                                        <Smartphone className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Mobile OTP</h2>
+                                        <p className="text-sm text-gray-500">Quick & secure login</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="otp-contact" className="text-sm font-medium">Email or Phone Number</Label>
+                                        <div className="relative mt-1">
+                                            <Mail className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                            <Input
+                                                id="otp-contact"
+                                                placeholder="email@example.com or +91XXXXXXXXXX"
+                                                className="pl-9 h-11"
+                                                value={otpContact}
+                                                onChange={(e) => setOtpContact(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
+                                            />
+                                        </div>
+                                    </div>
+                                    <Button
+                                        onClick={handleSendOtp}
+                                        disabled={isSending}
+                                        className="w-full h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold rounded-xl"
+                                    >
+                                        {isSending ? (
+                                            <span className="flex items-center gap-2">
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Sending OTP...
+                                            </span>
+                                        ) : 'Send OTP'}
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 'verify' && (
+                            <motion.div key="verify" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                                <div className="text-center mb-6">
+                                    <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                                        <Mail className="w-8 h-8 text-emerald-600" />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Enter OTP</h2>
+                                    <p className="text-sm text-gray-500 mt-1">Sent to <strong>{otpContact}</strong></p>
+                                </div>
+                                <div className="flex gap-2 justify-center mb-4">
+                                    {otp.map((digit, index) => (
+                                        <input
+                                            key={index}
+                                            id={`otp-${index}`}
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength={1}
+                                            value={digit}
+                                            onChange={(e) => handleOtpChange(index, e.target.value)}
+                                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                            className={`w-11 h-12 text-center text-lg font-bold border-2 rounded-xl outline-none transition-all ${otpError ? 'border-red-400 bg-red-50' : digit ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-gray-50'
+                                                } focus:border-emerald-500 focus:bg-emerald-50`}
+                                        />
+                                    ))}
+                                </div>
+                                {otpError && <p className="text-xs text-red-500 text-center mb-3">{otpError}</p>}
+                                <Button
+                                    onClick={handleVerifyOtp}
+                                    className="w-full h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold rounded-xl mb-3"
+                                >
+                                    Verify OTP
+                                </Button>
+                                <div className="text-center">
+                                    {resendCooldown > 0 ? (
+                                        <p className="text-sm text-gray-400">Resend in {resendCooldown}s</p>
+                                    ) : (
+                                        <button onClick={handleSendOtp} className="text-sm text-emerald-600 hover:text-emerald-500 font-medium flex items-center gap-1 mx-auto">
+                                            <RefreshCw className="w-3.5 h-3.5" /> Resend OTP
+                                        </button>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Success Step */}
+                        {step === 'success' && (
+                            <motion.div key="success" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-4">
+                                <motion.div
+                                    className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"
+                                    animate={{ scale: [1, 1.1, 1] }}
+                                    transition={{ duration: 0.5 }}
+                                >
+                                    <CheckCircle className="w-10 h-10 text-emerald-600" />
+                                </motion.div>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Verified! ✓</h2>
+                                <p className="text-sm text-gray-500 mt-1">Logging you in...</p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>,
+        document.body
+    );
+};
 
 // --- Premium 3D & Holographic Scenes ---
 
@@ -376,68 +573,47 @@ const Login = () => {
     const { login } = useAppStore();
     const [showPassword, setShowPassword] = useState(false);
     const [activeSlide, setActiveSlide] = useState(0);
+    const [showOtpModal, setShowOtpModal] = useState(false);
 
     // Form State
-    const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
+    const [fullName, setFullName] = useState("");
     const [contact, setContact] = useState("");
-    const [otp, setOtp] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState<{ name?: string; contact?: string; password?: string }>({});
 
-    const validateContact = (value: string) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^\+?[1-9]\d{1,14}$/; // Simple international phone regex
-        // or stricter: /^\d{10}$/ for 10 digit
-
-        return emailRegex.test(value) || phoneRegex.test(value);
+    const validate = () => {
+        const newErrors: typeof errors = {};
+        if (!fullName.trim()) newErrors.name = "Name is required";
+        if (!contact.trim()) newErrors.contact = "Email or phone is required";
+        else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phoneRegex = /^\+?[1-9]\d{6,14}$/;
+            if (!emailRegex.test(contact) && !phoneRegex.test(contact))
+                newErrors.contact = "Enter a valid email or phone number";
+        }
+        if (!password) newErrors.password = "Password is required";
+        else if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
-    const handleSendOtp = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!contact || !password) {
-            toast.error("Please fill in all fields");
-            return;
-        }
-
-        if (!validateContact(contact)) {
-            toast.error("Please enter a valid email or phone number");
-            return;
-        }
+        if (!validate()) return;
 
         setIsLoading(true);
-
-        // Simulate API call delay
-        setTimeout(() => {
-            setIsLoading(false);
-            setStep('otp');
-            toast.success(`OTP sent to ${contact}`);
-            // In a real app, you would trigger the backend to send the OTP here
-        }, 1500);
+        // Instant login — no fake delay
+        login(contact, fullName.trim());
+        toast.success(`Welcome, ${fullName.trim()}! 🌱`);
+        navigate("/dashboard");
     };
 
-    const handleVerifyOtp = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (otp.length !== 6) {
-            toast.error("Please enter a valid 6-digit OTP");
-            return;
-        }
-
-        setIsLoading(true);
-
-        // Simulate OTP verification
-        setTimeout(() => {
-            setIsLoading(false);
-            if (otp === "123456") { // Mock check
-                login(contact);
-                toast.success("Login successful!");
-                navigate("/dashboard");
-            } else {
-                toast.error("Invalid OTP. Please try again.");
-                setOtp("");
-            }
-        }, 1500);
+    const handleOtpSuccess = (otpContact: string) => {
+        const name = otpContact.includes('@') ? otpContact.split('@')[0] : 'Farmer';
+        login(otpContact, name);
+        toast.success(`Welcome, ${name}! 🌱 Logged in via OTP`);
+        navigate("/dashboard");
     };
 
     useEffect(() => {
@@ -450,185 +626,163 @@ const Login = () => {
     return (
         <div className="min-h-screen w-full flex bg-background overflow-hidden relative font-sans selection:bg-emerald-500/30">
 
-            {/* Left: Login Form (Glassmorphism + Spotlight) */}
+            {/* Left: Login Form */}
             <div className="w-full lg:w-1/2 relative z-10 flex items-center justify-center p-6 lg:p-12">
                 <div className="absolute inset-0 bg-grid-black/[0.02] -z-10" />
 
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, ease: "easeOut" }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
                     className="w-full max-w-md"
                 >
-                    <SpotlightToogle className="rounded-3xl border border-white/20 shadow-2xl backdrop-blur-3xl bg-white/60 dark:bg-black/40 p-8 md:p-12">
-                        <div className="mb-10">
-                            <div className="flex items-center gap-3 mb-6">
+                    <SpotlightToogle className="rounded-3xl border border-white/20 shadow-2xl backdrop-blur-3xl bg-white/60 dark:bg-black/40 p-8 md:p-10">
+
+                        {/* Header */}
+                        <div className="mb-8">
+                            <div className="flex items-center gap-3 mb-5">
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
                                     <Leaf className="w-6 h-6" />
                                 </div>
                                 <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">AgriYield</span>
                             </div>
-                            <h1 className="text-3xl font-bold text-foreground mb-3 tracking-tight">
-                                {step === 'credentials' ? "Welcome Back" : "Verify Identity"}
-                            </h1>
-                            <p className="text-muted-foreground text-lg">
-                                {step === 'credentials'
-                                    ? "Secure access to your agricultural command center."
-                                    : "Enter the code sent to your device to continue."}
-                            </p>
+                            <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">Welcome Back 👋</h1>
+                            <p className="text-muted-foreground">Sign in to your agricultural command center.</p>
                         </div>
 
-                        <AnimatePresence mode="wait">
-                            {step === 'credentials' ? (
-                                <motion.form
-                                    key="credentials-form"
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    onSubmit={handleSendOtp}
-                                    className="space-y-6 relative z-20"
-                                >
-                                    <div className="space-y-2">
-                                        <Label htmlFor="contact">Email or Phone</Label>
-                                        <div className="relative group">
-                                            <User className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
-                                            <Input
-                                                id="contact"
-                                                placeholder="name@example.com / +1234567890"
-                                                className="pl-10 h-12 bg-white/50 border-gray-200/50 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all duration-300"
-                                                value={contact}
-                                                onChange={(e) => setContact(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
+                        {/* Form */}
+                        <form onSubmit={handleLogin} className="space-y-4">
 
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                            <Label htmlFor="password">Password</Label>
-                                            <Link
-                                                to="/forgot-password"
-                                                className="text-xs font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
-                                            >
-                                                Forgot password?
-                                            </Link>
-                                        </div>
-                                        <div className="relative group">
-                                            <Lock className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
-                                            <Input
-                                                id="password"
-                                                type={showPassword ? "text" : "password"}
-                                                placeholder="••••••••"
-                                                className="pl-10 pr-10 h-12 bg-white/50 border-gray-200/50 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all duration-300"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-3.5 text-muted-foreground hover:text-emerald-600 transition-colors"
-                                            >
-                                                {showPassword ? (
-                                                    <EyeOff className="h-5 w-5" />
-                                                ) : (
-                                                    <Eye className="h-5 w-5" />
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
+                            {/* Name */}
+                            <div className="space-y-1">
+                                <Label htmlFor="fullName">Full Name</Label>
+                                <div className="relative group">
+                                    <User className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
+                                    <Input
+                                        id="fullName"
+                                        placeholder="e.g. Ravi Kumar"
+                                        className={`pl-10 h-12 bg-white/50 border-gray-200/50 focus:border-emerald-500/50 transition-all ${errors.name ? "border-red-400" : ""}`}
+                                        value={fullName}
+                                        onChange={(e) => { setFullName(e.target.value); setErrors(p => ({ ...p, name: undefined })); }}
+                                    />
+                                </div>
+                                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                            </div>
 
-                                    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                                        <Button
-                                            className="w-full h-12 text-lg font-medium bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-xl shadow-emerald-500/20 rounded-xl transition-all"
-                                            type="submit"
-                                            disabled={isLoading}
-                                        >
-                                            {isLoading ? "Sending OTP..." : "Continue"} <ArrowRight className="ml-2 h-5 w-5" />
-                                        </Button>
-                                    </motion.div>
+                            {/* Email / Phone */}
+                            <div className="space-y-1">
+                                <Label htmlFor="contact">Email or Phone</Label>
+                                <div className="relative group">
+                                    <User className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
+                                    <Input
+                                        id="contact"
+                                        placeholder="name@example.com or +91XXXXXXXXXX"
+                                        className={`pl-10 h-12 bg-white/50 border-gray-200/50 focus:border-emerald-500/50 transition-all ${errors.contact ? "border-red-400" : ""}`}
+                                        value={contact}
+                                        onChange={(e) => { setContact(e.target.value); setErrors(p => ({ ...p, contact: undefined })); }}
+                                    />
+                                </div>
+                                {errors.contact && <p className="text-xs text-red-500 mt-1">{errors.contact}</p>}
+                            </div>
 
-                                    <div className="relative my-8">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <span className="w-full border-t border-gray-200" />
-                                        </div>
-                                        <div className="relative flex justify-center text-xs uppercase tracking-wider">
-                                            <span className="bg-white px-4 text-muted-foreground font-medium">
-                                                Alternative Access
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Button type="button" variant="outline" className="h-11 border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50 transition-colors">
-                                            <Smartphone className="w-4 h-4 mr-2 text-emerald-600" /> Mobile OTP
-                                        </Button>
-                                        <Button type="button" variant="outline" className="h-11 border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50 transition-colors">
-                                            <UploadCloud className="w-4 h-4 mr-2 text-emerald-600" /> Passkey
-                                        </Button>
-                                    </div>
-                                </motion.form>
-                            ) : (
-                                <motion.form
-                                    key="otp-form"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 20 }}
-                                    onSubmit={handleVerifyOtp}
-                                    className="space-y-6 relative z-20 flex flex-col items-center"
-                                >
-                                    <div className="text-center mb-4">
-                                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
-                                            <CheckCircle2 className="w-8 h-8" />
-                                        </div>
-                                        <p className="text-sm text-gray-500">
-                                            We've sent a 6-digit code to <br />
-                                            <span className="font-semibold text-gray-900">{contact}</span>
-                                        </p>
-                                    </div>
-
-                                    <div className="space-y-2 flex flex-col items-center">
-                                        <Label htmlFor="otp" className="sr-only">One-Time Password</Label>
-                                        <InputOTP maxLength={6} value={otp} onChange={(val) => setOtp(val)}>
-                                            <InputOTPGroup>
-                                                <InputOTPSlot index={0} />
-                                                <InputOTPSlot index={1} />
-                                                <InputOTPSlot index={2} />
-                                                <InputOTPSlot index={3} />
-                                                <InputOTPSlot index={4} />
-                                                <InputOTPSlot index={5} />
-                                            </InputOTPGroup>
-                                        </InputOTP>
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            Enter the code 123456 to continue
-                                        </p>
-                                    </div>
-
-                                    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full">
-                                        <Button
-                                            className="w-full h-12 text-lg font-medium bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-xl shadow-emerald-500/20 rounded-xl transition-all"
-                                            type="submit"
-                                            disabled={isLoading || otp.length < 6}
-                                        >
-                                            {isLoading ? "Verifying..." : "Verify & Login"}
-                                        </Button>
-                                    </motion.div>
-
+                            {/* Password */}
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                    <Label htmlFor="password">Password</Label>
                                     <button
                                         type="button"
-                                        onClick={() => setStep('credentials')}
-                                        className="text-sm text-emerald-600 hover:underline mt-4"
+                                        onClick={() => setShowOtpModal(true)}
+                                        className="text-xs font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
                                     >
-                                        Back to login
+                                        Forgot password?
                                     </button>
-                                </motion.form>
-                            )}
-                        </AnimatePresence>
+                                </div>
+                                <div className="relative group">
+                                    <Lock className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        className={`pl-10 pr-10 h-12 bg-white/50 border-gray-200/50 focus:border-emerald-500/50 transition-all ${errors.password ? "border-red-400" : ""}`}
+                                        value={password}
+                                        onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: undefined })); }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-3.5 text-muted-foreground hover:text-emerald-600 transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
+                                </div>
+                                {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+                            </div>
+
+                            {/* Submit */}
+                            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} className="pt-2">
+                                <Button
+                                    className="w-full h-12 text-base font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/20 rounded-xl transition-all"
+                                    type="submit"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <span className="flex items-center gap-2">
+                                            <motion.div
+                                                className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                                            />
+                                            Signing in...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            Sign In <ArrowRight className="h-5 w-5" />
+                                        </span>
+                                    )}
+                                </Button>
+                            </motion.div>
+
+                            {/* Divider */}
+                            <div className="relative my-2">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-gray-200" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                                    <span className="bg-white px-4 text-muted-foreground font-medium">or continue with</span>
+                                </div>
+                            </div>
+
+                            {/* Alt login */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setShowOtpModal(true)}
+                                    className="h-11 border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50 transition-colors text-sm"
+                                >
+                                    <Smartphone className="w-4 h-4 mr-2 text-emerald-600" /> Mobile OTP
+                                </Button>
+                                <Button type="button" variant="outline" className="h-11 border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50 transition-colors text-sm">
+                                    <UploadCloud className="w-4 h-4 mr-2 text-emerald-600" /> Passkey
+                                </Button>
+                            </div>
+                        </form>
                     </SpotlightToogle>
 
-                    <p className="text-center mt-8 text-sm text-muted-foreground">
+                    <p className="text-center mt-6 text-sm text-muted-foreground">
                         Don't have an account? <Link to="/register" className="text-emerald-600 font-semibold hover:underline">Apply for Access</Link>
                     </p>
                 </motion.div>
             </div>
+
+            {/* OTP Modal */}
+            {showOtpModal && (
+                <OTPModal
+                    onClose={() => setShowOtpModal(false)}
+                    onSuccess={handleOtpSuccess}
+                    initialContact={contact}
+                />
+            )}
 
             {/* Right: Premium Animation Portfolio */}
             <div className="hidden lg:block lg:w-1/2 relative bg-[#050505] overflow-hidden">
@@ -664,7 +818,7 @@ const Login = () => {
 
                         {/* Main Carousel */}
                         <div className="w-full h-full flex items-center justify-center perspective-1000">
-                            <AnimatePresence>
+                            <AnimatePresence mode="wait">
                                 <PortfolioItem
                                     key={PORTFOLIO_ITEMS[activeSlide].id}
                                     {...PORTFOLIO_ITEMS[activeSlide]}
