@@ -59,6 +59,19 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Gemini AI Integration
+- YouTube API Integration
+- Real-time Weather Data
+
+## Key Features
+
+- **AI Crop Analysis**: Upload photos of crops to identify diseases and get treatment advice.
+- **Disease Identification**: Real-time identification using advanced AI models.
+- **Treatment Suggestions**: Recommended plant medicines and organic treatments.
+- **Weather Dashboard**: Precise farming-focused weather forecasts.
+- **Medicine Marketplace**: Browse and search for agricultural medicines.
+- **Multi-language Support**: Interface available in multiple languages.
+- **Analytics & Insights**: Track farming progress and data trends.
 
 ## How can I deploy this project?
 
