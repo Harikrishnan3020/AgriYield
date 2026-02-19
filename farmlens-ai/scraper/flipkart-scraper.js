@@ -84,40 +84,7 @@ async function scrapePlantMedicines() {
         console.log(`\n📊 Total products scraped: ${products.length}`);
 
         if (products.length > 0) {
-            // Save to JSON file
-            const outputPath = path.join(process.cwd(), 'src', 'data', 'scraped-medicines.json');
-            const outputDir = path.dirname(outputPath);
-
-            // Ensure directory exists
-            if (!fs.existsSync(outputDir)) {
-                fs.mkdirSync(outputDir, { recursive: true });
-            }
-
-            const dataToSave = {
-                scrapeDate: new Date().toISOString(),
-                totalProducts: products.length,
-                source: 'Flipkart',
-                url: FLIPKART_URL,
-                products: products
-            };
-
-            fs.writeFileSync(outputPath, JSON.stringify(dataToSave, null, 2));
-            console.log(`\n💾 Saved ${products.length} products to: ${outputPath}`);
-
-            // Also create a simplified version for quick import
-            const simplifiedPath = path.join(process.cwd(), 'src', 'data', 'medicines-simplified.ts');
-            const tsContent = generateTypescriptFile(products);
-            fs.writeFileSync(simplifiedPath, tsContent);
-            console.log(`📝 Generated TypeScript file: ${simplifiedPath}`);
-
-            // Display sample products
-            console.log('\n📦 Sample products:');
-            products.slice(0, 5).forEach((p, i) => {
-                console.log(`\n${i + 1}. ${p.name}`);
-                console.log(`   Price: ₹${p.price}`);
-                console.log(`   Rating: ${p.rating}⭐ (${p.reviews} reviews)`);
-                console.log(`   Category: ${p.category}`);
-            });
+            await saveProducts(products);
 
             return products;
         } else {
@@ -133,12 +100,141 @@ async function scrapePlantMedicines() {
 
     } catch (error) {
         console.error('\n❌ Error scraping Flipkart:', error.message);
-        console.log('\n💡 Note: Flipkart may block automated requests. Consider:');
-        console.log('   1. Using a proxy service');
-        console.log('   2. Adding delays between requests');
-        console.log('   3. Using Flipkart API (if available)');
-        console.log('   4. Using mock data for development');
+        console.log('\n⚠️ Switching to MOCK DATA due to scraping restrictions...');
+
+        // Use mock data if scraping fails
+        const mockProducts = getMockMedicines();
+        await saveProducts(mockProducts);
     }
+}
+
+// Save products to files
+async function saveProducts(products) {
+    // Save to JSON file
+    const outputPath = path.join(process.cwd(), 'src', 'data', 'scraped-medicines.json');
+    const outputDir = path.dirname(outputPath);
+
+    // Ensure directory exists
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    const dataToSave = {
+        scrapeDate: new Date().toISOString(),
+        totalProducts: products.length,
+        source: 'Mock Data (Fallback)',
+        url: FLIPKART_URL,
+        products: products
+    };
+
+    fs.writeFileSync(outputPath, JSON.stringify(dataToSave, null, 2));
+    console.log(`\n💾 Saved ${products.length} products to: ${outputPath}`);
+
+    // Also create a simplified version for quick import
+    const simplifiedPath = path.join(process.cwd(), 'src', 'data', 'medicines-simplified.ts');
+    const tsContent = generateTypescriptFile(products);
+    fs.writeFileSync(simplifiedPath, tsContent);
+    console.log(`📝 Generated TypeScript file: ${simplifiedPath}`);
+
+    // Display sample products
+    console.log('\n📦 Sample products:');
+    products.slice(0, 5).forEach((p, i) => {
+        console.log(`\n${i + 1}. ${p.name}`);
+        console.log(`   Price: ₹${p.price}`);
+        console.log(`   Rating: ${p.rating}⭐ (${p.reviews} reviews)`);
+        console.log(`   Category: ${p.category}`);
+    });
+
+    return products;
+}
+
+function getMockMedicines() {
+    return [
+        {
+            id: "mock_1",
+            name: "Amistar Top Fungicide (Syngenta)",
+            price: 450,
+            originalPrice: 500,
+            rating: 4.5,
+            reviews: "120",
+            image: "https://rukminim2.flixcart.com/image/416/416/kuk4x3k0/soil-manure/q/v/u/200-amistar-top-syngenta-original-imag7n3g6z3g3g3z.jpeg",
+            link: "https://www.flipkart.com",
+            source: "Mock",
+            inStock: true,
+            category: "fungicide",
+            scrapedAt: new Date().toISOString()
+        },
+        {
+            id: "mock_2",
+            name: "Neem Oil Organic Pesticide",
+            price: 299,
+            originalPrice: 399,
+            rating: 4.2,
+            reviews: "85",
+            image: "https://rukminim2.flixcart.com/image/416/416/kwdv3bk0/plant-sapling/s/4/w/no-perennial-yes-neem-plant-1-green-nursery-original-imag92q3z3g3g3z.jpeg",
+            link: "https://www.flipkart.com",
+            source: "Mock",
+            inStock: true,
+            category: "organic",
+            scrapedAt: new Date().toISOString()
+        },
+        {
+            id: "mock_3",
+            name: "Coragen Insecticide (FMC)",
+            price: 850,
+            originalPrice: 950,
+            rating: 4.8,
+            reviews: "210",
+            image: "https://rukminim2.flixcart.com/image/416/416/xif0q/insecticide/w/s/4/30-coragen-30ml-fmc-original-imagzdhyg2y3g3g3.jpeg",
+            link: "https://www.flipkart.com",
+            source: "Mock",
+            inStock: true,
+            category: "pesticide",
+            scrapedAt: new Date().toISOString()
+        },
+        {
+            id: "mock_4",
+            name: "Roundup Herbicide (Monsanto)",
+            price: 350,
+            originalPrice: 400,
+            rating: 4.3,
+            reviews: "150",
+            image: "https://rukminim2.flixcart.com/image/416/416/k7usyvk0/plant-sapling/g/t/d/perennial-no-roundup-herbicide-1-green-nursery-original-imafpy6z3g3g3z.jpeg",
+            link: "https://www.flipkart.com",
+            source: "Mock",
+            inStock: true,
+            category: "herbicide",
+            scrapedAt: new Date().toISOString()
+        },
+        {
+            id: "mock_5",
+            name: "NPK 19:19:19 Soluble Fertilizer",
+            price: 150,
+            originalPrice: 200,
+            rating: 4.6,
+            reviews: "320",
+            image: "https://rukminim2.flixcart.com/image/416/416/xif0q/fertilizer/a/b/c/1-npk-19-19-19-100-water-soluble-fertilizer-for-plants-original-imagz3g3g3z.jpeg",
+            link: "https://www.flipkart.com",
+            source: "Mock",
+            inStock: true,
+            category: "fertilizer",
+            scrapedAt: new Date().toISOString()
+        },
+        {
+            id: "mock_6",
+            name: "Bavistin Fungicide (Crystal)",
+            price: 220,
+            originalPrice: 250,
+            rating: 4.4,
+            reviews: "95",
+            image: "https://rukminim2.flixcart.com/image/416/416/k7usyvk0/plant-sapling/g/t/d/perennial-no-bavistin-fungicide-1-green-nursery-original-imafpy6z3g3g3z.jpeg",
+            link: "https://www.flipkart.com",
+            source: "Mock",
+            inStock: true,
+            category: "fungicide",
+            scrapedAt: new Date().toISOString()
+        }
+    ];
 }
 
 // Categorize medicine based on name
