@@ -28,9 +28,10 @@ const Header = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "sticky top-0 z-30 px-4 py-3 bg-background/80 backdrop-blur-xl border-b border-white/10",
+        "sticky top-0 z-30 px-4 py-3 backdrop-blur-xl border-b border-emerald-500/10",
         className
       )}
+      style={{ background: "rgba(7,21,10,0.85)" }}
     >
       <div className="flex items-center justify-between max-w-md mx-auto">
         {/* Logo & Welcome */}
@@ -43,19 +44,19 @@ const Header = ({
           </motion.div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="font-bold text-foreground">AgriYield</h1>
+              <h1 className="font-bold text-white">AgriYield</h1>
               {isPremium && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-2xs text-primary-foreground font-medium"
+                  className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-2xs text-white font-medium"
                 >
                   <Sparkles className="w-2.5 h-2.5" />
                   PRO
                 </motion.span>
               )}
             </div>
-            <p className="text-2xs text-muted-foreground">Hello, {userName}</p>
+            <p className="text-2xs text-emerald-400/70">Hello, {userName} 👋</p>
           </div>
         </div>
 
@@ -68,7 +69,8 @@ const Header = ({
 
           <Link to="/login">
             <motion.button
-              className="w-10 h-10 rounded-xl bg-card/80 backdrop-blur-lg border border-white/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="w-10 h-10 rounded-xl backdrop-blur-lg border border-emerald-500/20 flex items-center justify-center text-emerald-300/60 hover:text-emerald-300 hover:border-emerald-500/40 transition-colors"
+              style={{ background: "rgba(16,185,129,0.08)" }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               title="Login Page"
@@ -79,18 +81,23 @@ const Header = ({
 
           <motion.button
             onClick={onNotificationsClick}
-            className="relative w-10 h-10 rounded-xl bg-card/80 backdrop-blur-lg border border-white/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            className="relative w-10 h-10 rounded-xl backdrop-blur-lg border border-emerald-500/20 flex items-center justify-center text-emerald-300/60 hover:text-emerald-300 hover:border-emerald-500/40 transition-colors"
+            style={{ background: "rgba(16,185,129,0.08)" }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <Bell className="w-4 h-4" />
-            {/* Notification dot */}
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-destructive" />
+            <motion.span
+              className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"
+              animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
           </motion.button>
 
           <motion.button
             onClick={onSettingsClick}
-            className="w-10 h-10 rounded-xl bg-card/80 backdrop-blur-lg border border-white/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            className="w-10 h-10 rounded-xl backdrop-blur-lg border border-emerald-500/20 flex items-center justify-center text-emerald-300/60 hover:text-emerald-300 hover:border-emerald-500/40 transition-colors"
+            style={{ background: "rgba(16,185,129,0.08)" }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
