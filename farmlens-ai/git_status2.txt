@@ -1,0 +1,10 @@
+ M .env.example
+ M package-lock.json
+ M package.json
+ M src/data/plant-medicines.ts
+ M src/pages/Login.tsx
+ M src/services/diagnosisVerification.ts
+ M src/services/youtube.ts
+ M tsc_output.txt
+?? git_status.txt
+?? src/services/huggingface.ts

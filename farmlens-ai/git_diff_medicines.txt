@@ -1,0 +1,43 @@
+diff --git a/farmlens-ai/src/data/plant-medicines.ts b/farmlens-ai/src/data/plant-medicines.ts
+index 98b09b8..5bb9666 100644
+--- a/farmlens-ai/src/data/plant-medicines.ts
++++ b/farmlens-ai/src/data/plant-medicines.ts
+@@ -481,20 +481,29 @@ export const getMedicinesByCategory = (category: PlantMedicine['category']) => {
+ export const getMedicinesByDisease = (disease: string) => {
+     if (!disease || disease === "Unknown") return [];
+ 
+-    const keywords = disease.toLowerCase().split(/\s+/).filter(w => w.length > 2);
++    const searchLower = disease.toLowerCase().trim();
++    const commonGenericWords = ["disease", "leaf", "spot", "mildew", "blight", "rot", "virus", "rust", "wilt"];
+ 
+     return plantMedicinesDatabase.filter(med => {
+-        const medDiseases = med.targetDiseases.map(d => d.toLowerCase());
++        const medDiseases = med.targetDiseases.map(d => d.toLowerCase().trim());
+ 
+-        // Exact match first
+-        if (medDiseases.some(d => d.includes(disease.toLowerCase()) || disease.toLowerCase().includes(d))) {
+-            return true;
++        // 1. Exact string match or substring match (e.g., "Tomato Late Blight" matches "Late Blight")
++        const hasStrongMatch = medDiseases.some(d => searchLower.includes(d) || d.includes(searchLower));
++        if (hasStrongMatch) return true;
++
++        // 2. Filter out generic keywords to prevent false positives (like matching "Early Blight" when asked for "Late Blight")
++        const significantKeywords = searchLower
++            .split(/\s+/)
++            .filter(w => w.length > 3 && !commonGenericWords.includes(w));
++
++        // 3. Only match if we have a highly significant match
++        if (significantKeywords.length > 0) {
++            return significantKeywords.some(keyword =>
++                medDiseases.some(d => d.includes(keyword))
++            );
+         }
+ 
+-        // Keyword match if no exact match
+-        return keywords.some(word =>
+-            medDiseases.some(d => d.includes(word))
+-        );
++        return false;
+     });
+ };
+ 

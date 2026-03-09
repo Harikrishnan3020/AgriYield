@@ -1,0 +1,26 @@
+ M .env.example
+ M package-lock.json
+ M package.json
+ M src/components/screens/HeroSection.tsx
+ M src/components/screens/ResultsCard.tsx
+ M src/components/ui/BottomNav.tsx
+ M src/components/ui/FallingLeaves.tsx
+ M src/components/ui/Header.tsx
+ M src/components/ui/LanguageSwitcher.tsx
+ M src/components/ui/WhatsAppFAB.tsx
+ M src/data/plant-medicines.ts
+ M src/index.css
+ M src/pages/AIAssistant.tsx
+ M src/pages/AnalyticsDashboard.tsx
+ M src/pages/Index.tsx
+ M src/pages/Landing.tsx
+ M src/pages/Login.tsx
+ M src/pages/MedicineDashboard.tsx
+ M src/pages/VideoTest.tsx
+ M src/pages/WeatherDashboard.tsx
+ M src/services/diagnosisVerification.ts
+ M src/services/youtube.ts
+ M tailwind.config.ts
+ M tsc_output.txt
+?? git_status.txt
+?? src/services/huggingface.ts

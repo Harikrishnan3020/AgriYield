@@ -1,0 +1,150 @@
+diff --git a/farmlens-ai/src/pages/Login.tsx b/farmlens-ai/src/pages/Login.tsx
+index f842906..f89afd0 100644
+--- a/farmlens-ai/src/pages/Login.tsx
++++ b/farmlens-ai/src/pages/Login.tsx
+@@ -337,7 +337,7 @@ const GlobalMarket = () => {
+                     transition={{ duration: 1, delay: i * 0.3 }}
+                 >
+                     <span className="text-[10px] text-amber-500/70 font-bold tracking-wider">{item.label}</span>
+-                    <span className={`text-xs font-mono font-bold ${item.val.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
++                    <span className={`text-xs font-mono font-bold ${item.val.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>
+                         {item.val}
+                     </span>
+                 </motion.div>
+@@ -559,6 +559,10 @@ const Login = () => {
+     const [isLoading, setIsLoading] = useState(false);
+     const [errors, setErrors] = useState<{ name?: string; contact?: string; password?: string }>({});
+ 
++    // OTP / Reset State
++    const [showOTPModal, setShowOTPModal] = useState(false);
++    const [isResettingPassword, setIsResettingPassword] = useState(false);
++
+     const portfolioItems = useMemo(() => ([
+         {
+             id: 1,
+@@ -592,7 +596,7 @@ const Login = () => {
+ 
+     const validate = () => {
+         const newErrors: typeof errors = {};
+-        if (!fullName.trim()) newErrors.name = t.nameRequired;
++        if (!isResettingPassword && !fullName.trim()) newErrors.name = t.nameRequired;
+         if (!contact.trim()) newErrors.contact = t.contactRequired;
+         else {
+             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+@@ -611,12 +615,25 @@ const Login = () => {
+         if (!validate()) return;
+ 
+         setIsLoading(true);
+-        // Instant login — no fake delay
+-        login(contact, fullName.trim());
+-        toast.success(t.welcomeUser.replace("{name}", fullName.trim()));
++
++        if (isResettingPassword) {
++            toast.success("Password successfully changed!");
++            setIsResettingPassword(false);
++        } else {
++            toast.success(t.welcomeUser.replace("{name}", fullName.trim() || contact.split('@')[0]));
++        }
++
++        login(contact, fullName.trim() || contact.split('@')[0] || "User");
+         navigate("/dashboard");
+     };
+ 
++    const handleForgotPasswordOtpSuccess = (otpContact: string) => {
++        setContact(otpContact);
++        setPassword("");
++        setIsResettingPassword(true);
++        toast.success("OTP Verified. Please secure your account with a new password.");
++    };
++
+     const handleOtpSuccess = (otpContact: string) => {
+         const name = otpContact.includes('@') ? otpContact.split('@')[0] : t.farmerLabel;
+         login(otpContact, name);
+@@ -649,7 +666,7 @@ const Login = () => {
+                         {/* Header */}
+                         <div className="mb-8">
+                             <div className="flex items-center gap-3 mb-5">
+-                                <div className="w-10 h-10 rounded-[12px] bg-[#10b981] flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
++                                <div className="w-10 h-10 rounded-[12px] bg-[#2563eb] flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
+                                     <Leaf className="w-6 h-6" strokeWidth={2.5} />
+                                 </div>
+                                 <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 font-sans tracking-tight">AgriYield</span>
+@@ -662,20 +679,22 @@ const Login = () => {
+                         <form onSubmit={handleLogin} className="space-y-4">
+ 
+                             {/* Name */}
+-                            <div className="space-y-1">
+-                                <Label htmlFor="fullName">{t.fullName}</Label>
+-                                <div className="relative group">
+-                                    <User className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
+-                                    <Input
+-                                        id="fullName"
+-                                        placeholder={t.fullNamePlaceholder}
+-                                        className={`pl-10 h-12 bg-white/50 border-gray-200/50 focus:border-emerald-500/50 transition-all ${errors.name ? "border-red-400" : ""}`}
+-                                        value={fullName}
+-                                        onChange={(e) => { setFullName(e.target.value); setErrors(p => ({ ...p, name: undefined })); }}
+-                                    />
++                            {!isResettingPassword && (
++                                <div className="space-y-1">
++                                    <Label htmlFor="fullName">{t.fullName}</Label>
++                                    <div className="relative group">
++                                        <User className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
++                                        <Input
++                                            id="fullName"
++                                            placeholder={t.fullNamePlaceholder}
++                                            className={`pl-10 h-12 bg-white/50 border-gray-200/50 focus:border-emerald-500/50 transition-all ${errors.name ? "border-red-400" : ""}`}
++                                            value={fullName}
++                                            onChange={(e) => { setFullName(e.target.value); setErrors(p => ({ ...p, name: undefined })); }}
++                                        />
++                                    </div>
++                                    {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                                 </div>
+-                                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+-                            </div>
++                            )}
+ 
+                             {/* Email / Phone */}
+                             <div className="space-y-1">
+@@ -696,7 +715,16 @@ const Login = () => {
+                             {/* Password */}
+                             <div className="space-y-1">
+                                 <div className="flex justify-between items-center">
+-                                    <Label htmlFor="password">{t.passwordLabel}</Label>
++                                    <Label htmlFor="password">{isResettingPassword ? "Set New Password" : t.passwordLabel}</Label>
++                                    {!isResettingPassword && (
++                                        <button
++                                            type="button"
++                                            onClick={() => setShowOTPModal(true)}
++                                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-500 hover:underline transition-colors"
++                                        >
++                                            Forgot password?
++                                        </button>
++                                    )}
+                                 </div>
+                                 <div className="relative group">
+                                     <Lock className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
+@@ -737,7 +765,7 @@ const Login = () => {
+                                         </span>
+                                     ) : (
+                                         <span className="flex items-center gap-2">
+-                                            {t.signIn} <ArrowRight className="h-5 w-5" />
++                                            {isResettingPassword ? "Save New Password & Login" : t.signIn} <ArrowRight className="h-5 w-5" />
+                                         </span>
+                                     )}
+                                 </Button>
+@@ -815,6 +843,15 @@ const Login = () => {
+                     </div>
+                 </div>
+             </div>
++
++            {/* OTP Modal */}
++            {showOTPModal && (
++                <OTPModal
++                    onClose={() => setShowOTPModal(false)}
++                    onSuccess={handleForgotPasswordOtpSuccess}
++                    initialContact={contact}
++                />
++            )}
+         </div>
+     );
+ };
